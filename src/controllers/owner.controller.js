@@ -69,8 +69,7 @@ exports.addNewOwner = catchAsyncErrors(async (req, res) => {
 // ?? Get Single Owner Handler
 exports.getOwnerById = catchAsyncErrors(async (req, res) => {
 	// TODO: req.params.id is giving undefined . need to solve the issue by asking sir
-	const owner = await Owner.findById(req.params.id);
-	console.log(req.params.id);
+	const owner = await Owner.findById(req.query.id);
 	if (!owner) {
 		throw new ApiError(400, "Owner Details not Found");
 	}
