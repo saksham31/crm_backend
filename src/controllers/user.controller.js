@@ -41,12 +41,13 @@ exports.registerUser = catchAsyncErrors(async (req, res) => {
 
 // ?? Admin Login Handler
 exports.loginAdmin = catchAsyncErrors(async (req, res) => {
-	const { email, password, contact } = req.body;
-	if ((!email || !contact) && !password) {
+	const { username, password } = req.body;
+
+	if (!username || !password) {
 		throw new ApiError(400, "phone number or email and password is required is required");
 	}
 	const user = await User.findOne({
-		$or: [{ contact }, { email }],
+		$or: [{ contact: username }, { email: username }],
 	}).select("+password");
 
 	if (!user) {
@@ -71,16 +72,19 @@ exports.loginAdmin = catchAsyncErrors(async (req, res) => {
 	delete userWithoutPassword.password;
 	delete userWithoutPassword.resetPasswordToken;
 
-	return res.status(200).cookie("token", token, options).json(
-		new ApiResponse(
-			200,
-			{
-				token,
-				userWithoutPassword,
-			},
-			"User logged In Successfully"
-		)
-	);
+	return res
+		.status(200)
+		.cookie("token", token, options)
+		.json(
+			new ApiResponse(
+				200,
+				{
+					token,
+					user: userWithoutPassword,
+				},
+				"User logged In Successfully"
+			)
+		);
 });
 
 // ?? Admin Logout Handler
@@ -88,4 +92,12 @@ exports.logoutUser = catchAsyncErrors(async (req, res) => {
 	res.status(200)
 		.cookie("token", null, { expires: new Date(Date.now()), httpOnly: true })
 		.json(new ApiResponse(200, "Admin Logged Out Successfully"));
+});
+
+exports.myProfile = catchAsyncErrors(async (req, res) => {
+	const user = await User.findById(req.user._id);
+	if (!user) {
+		throw new ApiError(404, "User not found");
+	}
+	res.status(200).json(new ApiResponse(200, { success: true, user }));
 });
